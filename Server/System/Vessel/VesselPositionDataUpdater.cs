@@ -30,7 +30,7 @@ namespace Server.System.Vessel
         public static void WritePositionDataToFile(VesselBaseMsgData message)
         {
             if (!(message is VesselPositionMsgData msgData)) return;
-            if (VesselContext.RemovedVessels.Contains(msgData.VesselId)) return;
+            if (VesselContext.RemovedVessels.ContainsKey(msgData.VesselId)) return;
 
             ApplyOrbitalBodyNameFromPositionMessage(msgData);
 
