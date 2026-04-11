@@ -126,9 +126,17 @@ namespace LmpClient.Systems.VesselRemoveSys
                 }
 
                 FlightGlobals.RemoveVessel(killVessel);
-                foreach (var part in killVessel.parts)
+                // Disable the GameObject immediately so Unity stops invoking FixedUpdate on the
+                // vessel MonoBehaviour. Without this, Vessel.FixedUpdate → Vessel.UpdateCaches()
+                // runs between here and when Object.Destroy is actually processed (end-of-frame),
+                // finding parts whose GameObjects are already marked destroyed → NullReferenceException.
+                killVessel.gameObject.SetActive(false);
+                if (killVessel.parts != null)
                 {
-                    Object.Destroy(part.gameObject);
+                    foreach (var part in killVessel.parts)
+                    {
+                        if (part != null) Object.Destroy(part.gameObject);
+                    }
                 }
                 Object.Destroy(killVessel.gameObject);
 
