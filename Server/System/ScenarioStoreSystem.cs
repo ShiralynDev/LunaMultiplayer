@@ -41,6 +41,13 @@ namespace Server.System
                     CurrentScenarios.TryAdd(Path.GetFileNameWithoutExtension(file), new ConfigNode(File.ReadAllText(file)));
                 }
 
+                // Repair any ContractSystem scenario produced by older LMP builds so
+                // that finished missions appear in Mission Control's Archived tab.
+                if (CurrentScenarios.TryGetValue("ContractSystem", out var contractsScenario))
+                {
+                    ScenarioDataUpdater.MigrateContractsScenario(contractsScenario);
+                }
+
                 if (createdFromScratch)
                 {
                     ScenarioDataUpdater.WriteScienceDataToFile(GameplaySettings.SettingsStore.StartingScience);
