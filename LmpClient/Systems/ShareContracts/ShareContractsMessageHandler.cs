@@ -108,12 +108,32 @@ namespace LmpClient.Systems.ShareContracts
                 return null;
             }
 
+            var contractTypeName = node.GetValue("type");
+            node.RemoveValues("type");
+
+            var contractType = ContractSystem.GetContractType(contractTypeName);
+            if (contractType == null)
+            {
+                // Contract's C# type isn't registered in this KSP install (e.g. the mod
+                // that defines the contract class isn't installed on this client).
+                // Skip it cleanly rather than letting Activator.CreateInstance NRE.
+                LunaLog.Log($"[LMP]: Skipping contract with unknown type '{contractTypeName}'. The mod that defines it is likely not installed on this client.");
+                return null;
+            }
+
+            if (ContractPartReferenceChecker.TryFindUnknownPartReference(node, out var unknownPartName))
+            {
+                // A contract parameter (typically ContractConfigurator's PartValidation)
+                // references a part that PartLoader doesn't know about on this client.
+                // Rehydrating it would throw deep inside the parameter loader and spam
+                // the log with a stack trace; skip it cleanly instead.
+                LunaLog.Log($"[LMP]: Skipping contract '{contractTypeName}' because it references part '{unknownPartName}' which is not installed on this client.");
+                return null;
+            }
+
             Contract contract;
             try
             {
-                var value = node.GetValue("type");
-                node.RemoveValues("type");
-                var contractType = ContractSystem.GetContractType(value);
                 contract = Contract.Load((Contract)Activator.CreateInstance(contractType), node);
             }
             catch (Exception e)

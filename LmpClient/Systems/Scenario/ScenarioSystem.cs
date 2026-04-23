@@ -1,6 +1,7 @@
 ﻿using LmpClient.Base;
 using LmpClient.Extensions;
 using LmpClient.Systems.SettingsSys;
+using LmpClient.Systems.ShareContracts;
 using LmpClient.Utilities;
 using LmpCommon;
 using System;
@@ -165,6 +166,19 @@ namespace LmpClient.Systems.Scenario
         {
             while (ScenarioQueue.TryDequeue(out var scenarioEntry))
             {
+                // Strip any shared contracts that reference parts not installed on this
+                // client BEFORE handing the node to ProtoScenarioModule. KSP's stock
+                // scenario loader will otherwise pass each contract through
+                // ContractConfigurator's PartValidation parameter loader during scene
+                // transition, which throws ArgumentException and surfaces the in-game
+                // exception popup. Safe because ContractSystem is in
+                // IgnoredScenarios.IgnoreSend (clients never echo it back to the server)
+                // and live contract changes flow through ShareContractsSystem instead.
+                if (scenarioEntry.ScenarioModule == ContractsScenarioSanitizer.ScenarioModuleName)
+                {
+                    ContractsScenarioSanitizer.StripContractsReferencingUnknownParts(scenarioEntry.ScenarioNode);
+                }
+
                 var psm = new ProtoScenarioModule(scenarioEntry.ScenarioNode);
                 if (IsScenarioModuleAllowed(psm.moduleName) && !IgnoredScenarios.IgnoreReceive.Contains(psm.moduleName))
                 {
