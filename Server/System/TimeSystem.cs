@@ -57,7 +57,7 @@ namespace Server.System
                 }
                 else
                 {
-                    LunaLog.Debug("Creating new start time file");
+                    LunaLog.Debug("Creating new time file");
                     TimeContext.StartTime = LunaNetworkTime.UtcNow;
                     TimeContext.EndTime = LunaNetworkTime.UtcNow;
                 }
