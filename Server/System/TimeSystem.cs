@@ -54,6 +54,7 @@ namespace Server.System
                     LunaLog.Debug("Creating new time file, replacement of start time file");
                     TimeContext.StartTime = GetStoredStartTimeFromFile();
                     TimeContext.EndTime = LunaNetworkTime.UtcNow;
+                    File.Delete(OldStartTimeFile); // delete it since we will be using the new timefile in the future
                 }
                 else
                 {
